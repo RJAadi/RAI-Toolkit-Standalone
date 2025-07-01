@@ -1,18 +1,43 @@
 apiVersion: v1
-kind: Service
+kind: ConfigMap
 metadata:
-  name: responsible-ai-security-workbench
+  name: security-workbench-config
   namespace: irai-toolkit-test
-  annotations:
-    service.beta.kubernetes.io/azure-load-balancer-internal: "true"
-  labels:
-    app: responsible-ai-security-workbench
-spec:
-  type: LoadBalancer
-  ports:
-  - port: 80
-  selector:
-    app: responsible-ai-security-workbench
+data:
+  # Authentication
+  AUTH_TYPE: "$none"
+  SECRET_KEY: "${secretkey}"
+
+  # Azure credentials
+  AZURE_CLIENT_ID: "${azureclientid}"
+  AZURE_TENANT_ID: "${azuretenantid}"
+  AZURE_AD_JWKS_URL: "${azuread_jwks_url}"
+  AZURE_CLIENT_SECRET: "${azureclientsecret}"
+
+  # API and security settings
+  ALLOW_ORIGINS: "*"
+  ERRORLOGAPI: ""
+  TELEMETRY_FLAG: "False"
+  SECURITYPDFGENERATIONIP: "http://localhost:80"
+
+  # Database details
+  DB_NAME: "admin"
+  DB_TYPE: "mongo"
+  DB_USERNAME: "mongouser"
+  DB_PWD: "mongopw123"
+  DB_IP: "mongodb-service"
+  DB_PORT: "${port}"
+  MONGO_PATH: "mongodb://mongouser:mongopw123@mongodb-service:27017/"
+
+  # Cosmos DB and storage
+  COSMOS_PATH: "${cosmos_path}"
+  MODEL_CONTAINER_NAME: "${modelcontainername}"
+  DATA_CONTAINER_NAME: "${datacontainername}"
+  ZIP_CONTAINER_NAME: "${zipcontainername}"
+  PREPROCESSOR_CONTAINER_NAME: "${preprocessorcontainername}"
+  AZURE_UPLOAD_API: "${azureuploadapi}"
+  AZURE_GET_API: "${azuregetapi}"
+  AZURE_UPDATE_API: "${azureupdateapi}"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -34,26 +59,40 @@ spec:
         app: responsible-ai-security-workbench
         version: v1
     spec:
-      automountServiceAccountToken: false # Disable token mounting
-      imagePullSecrets:
-         - name: docker-secret
+      automountServiceAccountToken: false # Disable service account token mounting
+      #imagePullSecrets:
+       # - name: docker-secret
       containers:
-      - name: responsible-ai-security-workbench
-        envFrom:
-        - configMapRef:
-            name: security-workbench-cosmos-config
-        image: <Image Name>
-        imagePullPolicy: Always
-        name: responsible-ai-security-workbench
-        ports:
-        - containerPort: 80
-        securityContext:
-            runAsUser: 1000  # Non-root user
+        - name: responsible-ai-security-workbench
+          image: localhost:5000/rjaadi001/rai_mod_sec_amd64:v8
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          envFrom:
+            - configMapRef:
+                name: security-workbench-config
+          securityContext:
+            runAsUser: 1000 # Run as non-root user
             runAsGroup: 1000
             capabilities:
               drop:
-                - ALL  # Drop all capabilities
-        resources:
-          limits:
-            cpu: '5'
-            memory: '6Gi'
+                - ALL # Drop all capabilities
+          #resources:
+            #limits:
+              #cpu: "5"
+              #memory: "6Gi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: responsible-ai-security-workbench
+  namespace: irai-toolkit-test
+  labels:
+    app: responsible-ai-security-workbench
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 80
+      targetPort: 80
+  selector:
+    app: responsible-ai-security-workbench

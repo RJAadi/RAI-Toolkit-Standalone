@@ -1,15 +1,46 @@
-FROM python:3.9.13
+# Use platform-specific base image for EKS (amd64)
+FROM --platform=linux/amd64 python:3.9-slim
 
-RUN useradd myLowPrivilegeUser
-USER myLowPrivilegeUser
+# Set environment variables
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
 
-ENV DEBIAN_FRONTEND=noninteractive
+# Create a non-root user
+RUN adduser --disabled-password --gecos '' myuser
 
-Copy . .
+# Set work directory
+WORKDIR /app
 
-RUN pip3 install -r requirement/requirement.txt
+# Copy only requirements first for better cache
+COPY requirement/requirement.txt ./requirement.txt
 
-WORKDIR src
+# Install system dependencies and Python requirements
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    build-essential \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender-dev \
+    tesseract-ocr \
+    poppler-utils \
+    && pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir -r requirement.txt \
+    && apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
-CMD ["sh", "-c", "python3 main.py"]
+# Copy entire source code to working directory
+COPY . .
 
+# Switch to non-root user
+USER myuser
+
+# Expose port (adjust if different in main.py)
+EXPOSE 8000
+
+# Set working directory for entrypoint
+WORKDIR /app/src
+
+# Entrypoint command
+CMD ["python", "main.py"]

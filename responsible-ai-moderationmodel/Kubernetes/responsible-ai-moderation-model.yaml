@@ -8,53 +8,68 @@ metadata:
 spec:
   type: ClusterIP
   ports:
-  - port: 8000
+    - port: 8000
+      targetPort: 8000
   selector:
     app: responsible-ai-moderation-model
 ---
 apiVersion: apps/v1
 kind: Deployment
-seccompProfile:
-type: "RuntimeDefault"
-automountServiceAccountToken: false
 metadata:
   name: responsible-ai-moderation-model
   namespace: irai-toolkit-test
-  labels:
-    app: responsible-ai-moderation-model
-    version: v1
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: responsible-ai-moderation-model
-      version: v1
   template:
     metadata:
       labels:
         app: responsible-ai-moderation-model
-        version: v1
     spec:
-      automountServiceAccountToken: false # Disable token mounting
-      imagePullSecrets:
-         - name: docker-secret
       containers:
-        - envFrom:
-          - configMapRef:
-              name: privacy-config
-          image: <Image Name>
-          imagePullPolicy: Always
-          name: responsible-ai-privacy
+        - name: responsible-ai-privacy
+          image: rjaadi001/rai_mod_model_amd64:v1
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8000
-          securityContext:
-            runAsUser: 1000  # Non-root user
-            runAsGroup: 1000
-            capabilities:
-              drop:
-                - ALL  # Drop all capabilities
-          resources:
-            limits:
-                #cpu: '2'
-                memory: '8Gi'
-                nvidia.com/gpu: 1
+          #resources:
+            #requests:
+              #cpu: "500m"
+              #memory: "1Gi"
+              #ephemeral-storage: "20Gi"  #at least 20GB of ephemeral storage is allocated
+            #limits:
+              #cpu: "1"
+              #memory: "2Gi"
+              #ephemeral-storage: "25Gi"  #Allows up to 25GB of ephemeral storage usage
+          envFrom:
+            - configMapRef:
+                name: privacy-config
+          volumeMounts:
+            - name: logs-volume
+              mountPath: /app/logs
+            - name: transformers-cache-volume
+              mountPath: /app/huggingface_cache
+      volumes:
+        - name: logs-volume
+          emptyDir: {}
+        - name: transformers-cache-volume
+          emptyDir: {}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: privacy-config
+  namespace: irai-toolkit-test
+data:
+  workers: "1"
+  DB_NAME: "admin"
+  DB_USERNAME: "mongouser"
+  DB_PWD: "mongopw123"
+  DB_IP: "mongodb-service"
+  DB_PORT: "27017"
+  MONGO_PATH: "mongodb://${DB_USERNAME}:${DB_PWD}@${DB_IP}:${DB_PORT}/"
+  MONGO_PATH_OVERRIDE: "mongodb://localhost:27017/"
+  HF_HOME: "/app/huggingface_cache"
+  LOG_DIR: "/app/logs"

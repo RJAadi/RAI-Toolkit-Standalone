@@ -51,7 +51,7 @@ AUTH_TYPE = os.getenv("AUTH_TYPE")
 
 log = CustomLogger()
 
-app = FastAPI(**read_config_yaml('../config/metadata.yaml'))
+app = FastAPI(**read_config_yaml('../app/config/metadata.yaml'))
 """
 
     Adding the CORS Middleware which handles the requests from different origins
@@ -178,4 +178,5 @@ else:
 
 if __name__ == "__main__":
     Bulk.loadApi()
-    uvicorn.run("main:app", host="0.0.0.0", port=80)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000)
+#port changed from 80 to 8000

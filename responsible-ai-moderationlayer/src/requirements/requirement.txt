@@ -25,5 +25,5 @@ pytest
 grapheme
 wheel==0.38.1
 aiohttp==3.10.11
-../lib/better_profanity-2.0.0-py3-none-any.whl
+#/lib/better_profanity-2.0.0-py3-none-any.whl
 

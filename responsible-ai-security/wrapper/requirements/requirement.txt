@@ -5,7 +5,7 @@ watchfiles==0.22.0
 requests==2.32.3
 python-multipart==0.0.9
 email-validator==2.2.0
-adversarial-robustness-toolbox==1.16.0
+#adversarial-robustness-toolbox==1.16.0
 openpyxl==3.1.4
 numpy==1.26.4
 pandas==2.2.2
@@ -29,7 +29,7 @@ python-jose[cryptography]
 pyjwt
 msal
 # lib/aicloudlibs-0.1.0-py3-none-any.whl
-lib/adversarial_robustness_toolbox-1.16.0-py3-none-any.whl
+# lib/adversarial_robustness_toolbox-1.16.0-py3-none-any.whl
 #Un-Comment Below 2 lines and comment above 2 lines to run locally
 #../lib/aicloudlibs-0.1.0-py3-none-any.whl  
 #../lib/adversarial_robustness_toolbox-1.16.0-py3-none-any.whl
