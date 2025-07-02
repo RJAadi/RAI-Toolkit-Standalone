@@ -127,7 +127,7 @@ spec:
           emptyDir: {} # Temporary storage for logs
       containers:
         - name: responsible-ai-moderation-layer
-          image: localhost:5000/rjaadi001/rai_mod_layer_amd64:v2
+          image: rjaadi001/rai_mod_layer_amd64:v2
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8000
