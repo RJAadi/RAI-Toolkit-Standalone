@@ -51,7 +51,7 @@ spec:
         - name: docker-secret
       containers:
         - name: responsible-ai-admin
-          image: localhost:5000/rjaadi001/rai_admin_amd64:v1 # e.g., myrepo/responsible-ai-admin:latest
+          image: rjaadi001/rai_admin_amd64:v1 # e.g., myrepo/responsible-ai-admin:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 30016
